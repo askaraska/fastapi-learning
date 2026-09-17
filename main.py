@@ -1,7 +1,56 @@
 from fastapi import FastAPI
 from typing import Optional
+from pydantic import BaseModel, Field #allows us to define the structure of incoming JSON data.
 
 app = FastAPI()
+
+# Create a Pydantic Model
+class User(BaseModel):
+    name: str
+    age: int
+    email: str
+
+class Product(BaseModel):
+    name: str
+    price: int = Field(gt=0)
+    category: str
+    description: Optional[str] = None
+
+class ProductResponse(BaseModel):
+    name: str
+    price: int
+    category: str
+
+class Order(BaseModel):
+    product_name: str
+    quantity: int = Field(gt=0)
+    price: int = Field(gt=0)
+    note: Optional[str] = None   
+
+class OrderResponse(BaseModel):
+    product_name: str
+    quantity: int
+    price: int
+
+@app.post("/users")
+def create_user(user: User): 
+    # FastAPI, take the incoming JSON body and convert/validate it using the User model
+    return{
+        "message": "User created successfully",
+        "user": user
+    }
+
+@app.post("/products", response_model=ProductResponse)
+def create_product(product: Product):
+    # return{
+    #     "message": "Product created successfully",
+    #     "product": product
+    # }
+    return product
+
+@app.post("/orders", response_model=OrderResponse)
+def order_process(order: Order):
+    return order
 
 @app.get("/")
 def home():
