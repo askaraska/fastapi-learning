@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from typing import Optional
 from routers import users, products, orders
 
+from database import engine, Base
+from models import product
+
 # from schemas import (
 #     User,
 #     Product,
@@ -10,6 +13,7 @@ from routers import users, products, orders
 #     OrderResponse
 # )
 
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
    title="FastAPI Learning Project"   
