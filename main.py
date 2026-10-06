@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from typing import Optional
-from routers import users, products, orders
+from routers import users, products, orders, auth
 
 from database import engine, Base
-from models import product
+from models import product, user
 
 # from schemas import (
 #     User,
@@ -22,7 +22,7 @@ app = FastAPI(
 app.include_router(users.router)
 app.include_router(products.router)
 app.include_router(orders.router)
-
+app.include_router(auth.router)
 
 
 @app.get("/")
