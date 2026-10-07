@@ -32,3 +32,8 @@ class OrderResponse(BaseModel):
     product_name: str
     quantity: int
     price: int
+
+class ErrorResponse(BaseModel):
+    success: bool
+    error: str
+    message: str

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models.product import Product as ProductDB
-from schemas.models import Product, ProductResponse
+from schemas.models import Product, ProductResponse, ErrorResponse
 
 router = APIRouter(
     prefix="/products",
@@ -47,6 +47,21 @@ def filter_products(category: str, price: int):
 #     #     "product": product
 #     # }
 #     return product
+
+@router.get("/error-test")
+def error_test():
+    raise HTTPException(
+        status_code=400,
+        detail="This is a test error"
+    )
+
+@router.get("/custom-error", response_model=ErrorResponse)
+def custom_error():
+    return {
+        "success": False,
+        "error": "CUSTOM_ERROR",
+        "message": "This is a custom error response"
+    }
 
 @router.post("", response_model=ProductResponse)
 def create_product(product: Product, db: Session = Depends(get_db)):

@@ -122,6 +122,18 @@ def test_create_product_invalid_price():
 
     assert response.status_code == 422    
 
+def test_create_product_negative_price():
+    product_data = {
+        "name": "Invalid Laptop",
+        "price": -100,
+        "category": "Electronics",
+        "description": "Negative price"
+    }
+
+    response = client.post("/products", json=product_data)
+
+    assert response.status_code == 422
+
 
 def test_create_product_missing_name():
     product_data = {
@@ -136,6 +148,33 @@ def test_create_product_missing_name():
     )
 
     assert response.status_code == 422
+
+def test_create_product_missing_category():
+    product_data = {
+        "name": "Test Laptop",
+        "price": 50000
+    }
+
+    response = client.post(
+        "/products",
+        json=product_data
+    )
+
+    assert response.status_code == 422
+
+def test_create_product_invalid_price_type():
+    product_data = {
+        "name": "Test Laptop",
+        "price": "very expensive",
+        "category": "Electronics"
+    }
+
+    response = client.post(
+        "/products",
+        json=product_data
+    )
+
+    assert response.status_code == 422    
 
 def test_get_products():
     response = client.get("/products")
@@ -231,4 +270,24 @@ def test_deleted_product_not_found(test_product):
 
     assert response.json() == {
         "detail": "Product not found"
+    }
+
+def test_error_test():
+    response = client.get("/products/error-test")
+
+    assert response.status_code == 400
+
+    assert response.json() == {
+        "detail": "This is a test error"
+    }    
+
+def test_custom_error():
+    response = client.get("/products/custom-error")
+
+    assert response.status_code == 200
+
+    assert response.json() == {
+        "success": False,
+        "error": "CUSTOM_ERROR",
+        "message": "This is a custom error response"
     }
