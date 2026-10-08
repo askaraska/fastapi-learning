@@ -291,3 +291,51 @@ def test_custom_error():
         "error": "CUSTOM_ERROR",
         "message": "This is a custom error response"
     }
+
+def test_async_test():
+    response = client.get("/async-test")
+
+    assert response.status_code == 200
+
+    assert response.json() == {
+        "message": "This is an async endpoint"
+    }
+
+def test_async_wait():
+    response = client.get("/async-wait")    
+
+    assert response.status_code == 200
+
+    assert response.json() == {
+        "message": "Async operation completed"
+    }
+
+def test_background_test():
+    response = client.post("/background-test")
+
+    assert response.status_code == 200
+
+    assert response.json() == {
+        "message": "Response sent successfully"
+    }    
+
+def test_custom_middleware_header():
+    response = client.get("/")
+
+    assert response.status_code == 200
+
+    assert response.headers["X-App-Name"] == "FastAPI-Learning"    
+
+def test_dependency_test():
+    response = client.get(
+        "/products/dependency-test",
+        headers={
+            "X-App-Name": "MyFastAPIApp"
+        }
+    )
+
+    assert response.status_code == 200
+
+    assert response.json() == {
+        "app_name": "MyFastAPIApp"
+    }    

@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.product import Product as ProductDB
 from schemas.models import Product, ProductResponse, ErrorResponse
+from utils.dependencies import get_app_name
+
 
 router = APIRouter(
     prefix="/products",
@@ -85,6 +87,14 @@ def get_products(db: Session = Depends(get_db)):
 
     return products
 
+@router.get("/dependency-test")
+def dependency_test(
+    app_name: str | None = Depends(get_app_name)
+):
+    return {
+        "app_name": app_name
+    }
+
 @router.get("/{product_id}", response_model=ProductResponse)
 def get_product(product_id: int, db: Session = Depends(get_db)):
 
@@ -143,3 +153,4 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     return{
         "message": "Product deleted successfully"
     }
+
