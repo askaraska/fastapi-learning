@@ -2,7 +2,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, BackgroundTasks
 from typing import Optional
-from routers import users, products, orders, auth
+from routers import users, products, orders, auth, chat
 
 from database import engine, Base
 from models import product, user
@@ -42,6 +42,7 @@ app.include_router(users.router)
 app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(auth.router)
+app.include_router(chat.router)
 
 def write_log(message: str):
     with open("background.log", "a") as file:

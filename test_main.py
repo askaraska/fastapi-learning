@@ -339,3 +339,58 @@ def test_dependency_test():
     assert response.json() == {
         "app_name": "MyFastAPIApp"
     }    
+
+
+def test_chat_endpoint(monkeypatch):
+    from routers.chat import ai_service
+
+    monkeypatch.setattr(
+        ai_service,
+        "generate_response",
+        lambda message: f"Test reply for: {message}"
+    )
+
+    response = client.post(
+        "/chat",
+        json={"message": "Hello"}
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "reply": "Test reply for: Hello"
+    }    
+
+
+def test_chat_endpoint_ai_failure(monkeypatch):
+    from routers.chat import ai_service
+
+    def mock_ai_failure(message):
+        raise RuntimeError("Simulated AI provider failure")
+
+    monkeypatch.setattr(
+        ai_service,
+        "generate_response",
+        mock_ai_failure
+    )
+
+    response = client.post(
+        "/chat",
+        json={"message": "Hello"}
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": (
+            "AI service is temporarily unavailable. "
+            "Please try again later."
+        )
+    }    
+
+
+def test_chat_endpoint_empty_message():
+    response = client.post(
+        "/chat",
+        json={"message": ""}
+    )
+
+    assert response.status_code == 422    
