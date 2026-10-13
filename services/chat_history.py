@@ -1,4 +1,5 @@
 class ChatHistory:
+    MAX_MESSAGES = 20
 
     def __init__(self):
         self.conversations: dict[str, list[dict[str, str]]] = {}
@@ -17,8 +18,9 @@ class ChatHistory:
             "content": content
         })
 
-    def get_history(
-        self,
-        conversation_id: str
-    ) -> list[dict[str, str]]:
+        self.conversations[conversation_id] = (
+            self.conversations[conversation_id][-self.MAX_MESSAGES:]
+        )
+
+    def get_history(self, conversation_id: str) -> list[dict[str, str]]:
         return self.conversations.get(conversation_id, [])

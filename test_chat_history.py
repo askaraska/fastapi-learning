@@ -42,3 +42,21 @@ def test_unknown_conversation_is_empty():
     history = ChatHistory()
 
     assert history.get_history("unknown") == []
+
+
+
+def test_history_keeps_only_latest_20_messages():
+    history = ChatHistory()
+
+    for number in range(25):
+        history.add_message(
+            "session-limit",
+            "user",
+            f"Message {number}"
+        )
+
+    messages = history.get_history("session-limit")
+
+    assert len(messages) == 20
+    assert messages[0]["content"] == "Message 5"
+    assert messages[-1]["content"] == "Message 24"

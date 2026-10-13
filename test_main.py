@@ -341,56 +341,136 @@ def test_dependency_test():
     }    
 
 
-def test_chat_endpoint(monkeypatch):
-    from routers.chat import ai_service
 
+def test_chat_endpoint(monkeypatch):
     monkeypatch.setattr(
-        ai_service,
-        "generate_response",
+        "routers.chat.ai_service.generate_response",
         lambda message: f"Test reply for: {message}"
     )
 
     response = client.post(
         "/chat",
-        json={"message": "Hello"}
+        json={
+            "conversation_id": "test-session-001",
+            "message": "Hello"
+        }
     )
 
     assert response.status_code == 200
-    assert response.json() == {
-        "reply": "Test reply for: Hello"
-    }    
+    data = response.json()
+    assert data["conversation_id"] == "test-session-001"
+    assert data["reply"].startswith("Test reply for:")
+    assert "user: Hello" in data["reply"]
 
 
 def test_chat_endpoint_ai_failure(monkeypatch):
-    from routers.chat import ai_service
-
-    def mock_ai_failure(message):
-        raise RuntimeError("Simulated AI provider failure")
+    def raise_error(message):
+        raise RuntimeError("Simulated AI failure")
 
     monkeypatch.setattr(
-        ai_service,
-        "generate_response",
-        mock_ai_failure
+        "routers.chat.ai_service.generate_response",
+        raise_error
     )
 
     response = client.post(
         "/chat",
-        json={"message": "Hello"}
+        json={
+            "conversation_id": "test-session-failure",
+            "message": "Hello"
+        }
     )
 
     assert response.status_code == 503
-    assert response.json() == {
-        "detail": (
-            "AI service is temporarily unavailable. "
-            "Please try again later."
-        )
-    }    
+    assert response.json()["detail"] == (
+        "AI service is temporarily unavailable. "
+        "Please try again later."
+    )
 
 
 def test_chat_endpoint_empty_message():
     response = client.post(
         "/chat",
-        json={"message": ""}
+        json={
+            "conversation_id": "test-session-empty",
+            "message": ""
+        }
     )
 
-    assert response.status_code == 422    
+    assert response.status_code == 422
+
+
+
+def test_chat_endpoint_preserves_conversation_context(monkeypatch):
+    received_messages = []
+
+    def fake_generate_response(message: str) -> str:
+        received_messages.append(message)
+        return f"Mock reply {len(received_messages)}"
+
+    monkeypatch.setattr(
+        "routers.chat.ai_service.generate_response",
+        fake_generate_response
+    )
+
+    conversation_id = "integration-session-001"
+
+    first_response = client.post(
+        "/chat",
+        json={
+            "conversation_id": conversation_id,
+            "message": "My name is Alex."
+        }
+    )
+
+    second_response = client.post(
+        "/chat",
+        json={
+            "conversation_id": conversation_id,
+            "message": "What is my name?"
+        }
+    )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 200
+
+    assert first_response.json()["reply"] == "Mock reply 1"
+    assert second_response.json()["reply"] == "Mock reply 2"
+
+    # The second AI request should include the previous conversation.
+    assert "My name is Alex." in received_messages[1]
+    assert "assistant: Mock reply 1" in received_messages[1]
+    assert "What is my name?" in received_messages[1]
+
+
+
+def test_chat_endpoint_separates_conversations(monkeypatch):
+    received_messages = []
+
+    def fake_generate_response(message: str) -> str:
+        received_messages.append(message)
+        return "Mock reply"
+
+    monkeypatch.setattr(
+        "routers.chat.ai_service.generate_response",
+        fake_generate_response
+    )
+
+    client.post(
+        "/chat",
+        json={
+            "conversation_id": "session-A",
+            "message": "Secret for session A"
+        }
+    )
+
+    response = client.post(
+        "/chat",
+        json={
+            "conversation_id": "session-B",
+            "message": "Hello from session B"
+        }
+    )
+
+    assert response.status_code == 200
+    assert "Hello from session B" in received_messages[1]
+    assert "Secret for session A" not in received_messages[1]
