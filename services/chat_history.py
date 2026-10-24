@@ -23,4 +23,7 @@ class ChatHistory:
         )
 
     def get_history(self, conversation_id: str) -> list[dict[str, str]]:
-        return self.conversations.get(conversation_id, [])
+        return [
+            message.copy()
+            for message in self.conversations.get(conversation_id, [])
+        ]
