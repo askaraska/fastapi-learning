@@ -7,12 +7,14 @@ class User(BaseModel):
     age: int
     email: str
 
+#input model
 class Product(BaseModel):
     name: str
     price: int = Field(gt=0)
     category: str
     description: Optional[str] = None
 
+#response model
 class ProductResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
